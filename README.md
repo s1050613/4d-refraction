@@ -1,10 +1,10 @@
-## Welcome to GitHub Pages
+## Imagine glass...
 
-You can use the [editor on GitHub](https://github.com/s1050613/4d-refraction/edit/main/README.md) to maintain and preview the content for your website in Markdown files.
+When you look through a glass marble, the light is bended through it before reaching your eyes. Beautiful patterns and shapes emerge as nature weaves light in an appealing way.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+We decided to take this phenomenon called **refraction** one _dimension_ further...
 
-### Markdown
+### WIP
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
