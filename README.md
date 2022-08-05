@@ -4,6 +4,8 @@ When you look through a glass marble, the light is bended through it before reac
 
 We decided to take this phenomenon called **refraction** one _dimension_ further...
 
+### [Try it out!](main.html)
+
 ### WIP
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
