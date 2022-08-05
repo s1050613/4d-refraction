@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>4D Refraction</title>
+		<meta charset="UTF-8">
+		
+        <script src="glslButNot.js"></script>
+        
+		<link rel="stylesheet" href="main.css" type="text/css"/>
+		<script src="main.js"></script>
+	</head>
+	<body>
+		<h1>4D Refraction</h1>
+		<h2>Glass makes light go crazy but 4d!!1</h2>
+		<canvas id="raymarchCan"></canvas>
+		<canvas width="512" height="512" id="finalCan"></canvas>
+		
+		<script type="text/vsh" id="vertShader">
+			attribute vec2 coords;
+			
+			void main(void) {
+				gl_Position = vec4(coords, 0., 1.);
+			}
+		</script>
+		<script type="text/fsh" id="fragShader">
+			precision highp float;
+			uniform highp vec2 resolution;
+			uniform highp float size;
+			
+			/*float scene(vec4 p) {
+				return min(length(p) - 1., p.y - -.5);
+			}
+			
+			vec3 getCol(vec3 coords) {
+				//return .5 + .5 * cos(5. + coords + vec3(0., 2., 4.));
+				vec4 ro = vec4(0., 0., 0., -2.);
+				vec4 rd = normalize(vec4(coords, 1.));
+				vec4 p = ro;
+				for(int i = 0; i < 1000; i++) {
+					float t = scene(p);
+					if(t < .001) {
+						return vec3(1.);
+					}
+					p += rd * t;
+				}
+				return vec3(0.);
+			}*/
+
+#define iTime 0.
+
+#define PI 3.14159
+
+#define MAX_STEPS 5000.
+#define MAX_DIS 10.
+#define EPSILON .001
+
+#define AMBIENT_LIGHT .1
+#define LIGHT_COL 1., 1., .99
+
+#define AIR_REFRACTIVE_INDEX 1.
+
+vec2 rotate(vec2 p, float ang) {
+    float c = cos(ang * PI / 180.);
+    float s = sin(ang * PI / 180.);
+    return vec2(p.x * c - p.y * s, p.x * s + p.y * c);
+}
+
+vec4 whereIsTheLight() {
+    return vec4(2., 2., 2., -2.);
+}
+
+float sde(vec4 p) {
+    float sphere = length(p) - 1.;
+    float ground = p.y - -1.1;
+    return min(sphere, ground);
+    //return sphere;
+}
+int matAtPoint(vec4 p) {
+    float sphere = length(p) - 1.;
+    float ground = p.y - -1.1;
+    if(sphere <= EPSILON) {
+        return 0;
+    } else if(ground <= EPSILON) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+vec4 normal(int mat, vec4 p) {
+    if(mat == 0) {
+        return normalize(p);
+    } else if(mat == 1) {
+        return vec4(0., 1., 0., 0.);
+    } else {
+        return vec4(-1.);
+    }
+}
+vec3 colFromMatAtPoint(int mat, vec4 p) {
+    if(mat == 0) {
+        return vec3(1., 0., 0.);
+    } else if(mat == 1) {
+        return vec3(0., 1., 0.) * (floor(fract(p.x / 2.) * 2.) == floor(fract(p.z / 2.) * 2.)? 1. : .7);
+    } else {
+        return vec3(-1.);
+    }
+}
+bool matIsReflective(int mat) {
+    if(mat == 0) {
+        return false;
+    } else if(mat == 1) {
+        return false;
+    } else {
+        return false;
+    }
+}
+bool matIsRefractive(int mat) {
+    if(mat == 0) {
+        return true;
+    } else if(mat == 1) {
+        return false;
+    } else {
+        return false;
+    }
+}
+float refractiveIndexFromMat(int mat) {
+    if(mat == 0) {
+        return 10.;
+    } else if(mat == 1) {
+        return 2.;
+    } else {
+        return AIR_REFRACTIVE_INDEX;
+    }
+}
+
+vec4 getCol(vec3 coords) {
+    //if(matAtPoint(vec3(10.)) == -1) return vec3(0.,1.,0.);
+    //else return vec3(0.,0.,1.);
+    
+    //return .5 + .5 * cos(iTime + coords.xyx + vec3(0., 2., 4.));
+    vec4 ro = vec4(0., 0., 0., -2.);
+    ro.xz = rotate(ro.xz, iTime * 22.5);
+    vec4 rd = normalize(vec4(coords, 1.));
+    rd.xz = rotate(rd.xz, iTime * 22.5);
+    vec4 p = ro;
+    float disTravelled = 0.;
+    bool inObject = false;
+    float currentRefractiveIndex = AIR_REFRACTIVE_INDEX;
+    for(float i = 0.; i < MAX_STEPS; i++) {
+        float t = sde(p);
+        /*if(!inObject) {
+            p += rd * t;
+        } else {
+            p += rd * -t;
+        }*/
+        if(inObject) {
+            t *= -1.;
+        }
+        p += rd * t;
+        if(t < EPSILON) {
+            //return vec3(1.);
+            
+            
+            int mat = matAtPoint(p);
+            vec4 n = normal(mat, p);
+            if(matIsReflective(mat)) {
+                rd = reflect(rd, n);
+                p += rd * EPSILON * 2.;
+                continue;
+            }
+            if(matIsRefractive(mat)) {
+                //return (p + 1.) / 2.;
+                if(inObject) {
+                    //return (p + 1.) / 2.;
+                    p += rd * EPSILON * 2.;
+                    mat = matAtPoint(p);
+                    //mat = matAtPoint(vec3(10.));
+                    if(mat != -1) {
+                        return vec4(1.,0.,0., 1.);
+                    }
+                    n *= -1.;
+                }
+                /*if(inObject) {
+                    inObject = false;
+                    p += rd * EPSILON * 10.;
+                    continue;
+                }*/
+                float newRefractiveIndex = refractiveIndexFromMat(mat);
+                float eta = currentRefractiveIndex / newRefractiveIndex;
+                if((eta > 1. && !inObject) || (eta < 1. && inObject)) {
+                    return vec4(0.,0.,1., 1.);
+                }
+                currentRefractiveIndex = newRefractiveIndex;
+                rd = refract(rd, n, eta);
+                p += rd * EPSILON * 2.;
+                inObject = !inObject;
+                continue;
+            }
+            
+            vec3 col = colFromMatAtPoint(mat, p);
+            vec4 l = normalize(whereIsTheLight() - p);
+            float ambient = AMBIENT_LIGHT;
+            float diffusive = clamp(dot(n, l), 0., 1.);
+            float specular = clamp(pow(dot(reflect(l, n), rd), 5.), 0., 1.);
+            return vec4(col * (ambient + diffusive) + vec3(LIGHT_COL) * specular, 1.);
+        }
+        disTravelled += t;
+        if(disTravelled > MAX_DIS) {
+            break;
+        }
+    }
+    return vec4(0.);
+    //return texture(iChannel0, rd).xyz;
+}
+			void main(void) {
+				//gl_FragColor = vec4(gl_FragCoord.x / resolution.x, 0., 0., 1.);
+				vec3 coords = vec3(mod(gl_FragCoord.x, size), gl_FragCoord.y, floor(gl_FragCoord.x / size)) / size;
+				coords = 2. * (coords - .5);
+				//resolution;
+				vec4 col = getCol(coords);
+				//col = vec3(coords.z, 0., 0.);
+				gl_FragColor = col;
+			}
+		</script>
+	</body>
+</html>
