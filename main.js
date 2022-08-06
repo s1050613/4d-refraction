@@ -309,6 +309,10 @@ function loop() {
 	lastFrame = performance.now();
 	window.requestAnimationFrame(loop);*/
 }
+function reset() {
+	localStorage.clear();
+	location.reload();
+}
 
 function compile(shader) {
 	var startT = performance.now();
