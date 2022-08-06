@@ -1,6 +1,49 @@
 * {
-	font-family: Arial;
+	font-family: "Poppins", Arial;
+}
+body {
+	background: #DFFFEF;
 }
 canvas {
 	border: 1px solid black;
+}
+#raymarchCan {
+	display: none;
+}
+.main {
+	margin: auto;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 90vw;
+	height: 90vh;
+	border: 10px solid #AFDFBF;
+	border-radius: 5vw;
+	background: white;
+}
+#finalCanCont {
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+}
+#finalCan {
+	margin-left: 5vw;
+	display: inline-block;
+	width: 35vw;
+}
+h1 {
+	margin: 5px;
+	text-align: center;
+}
+.rightCol {
+	padding: 10px;
+	box-sizing: border-box;
+	display: inline-block;
+	border: 1px solid black;
+	width: 35vw;
+	height: 35vw;
+	position: absolute;
+	right: 5vw;
 }
