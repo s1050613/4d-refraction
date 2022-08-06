@@ -5,6 +5,8 @@ const {floor, min, max, hypot: LENGTH} = Math;
 
 var SCENE_SIZE = +localStorage.getItem("scene_size") || 64;
 
+var globalPointSize = +localStorage.getItem("point_size") || 12;
+
 var gl;
 
 var pixelData;
@@ -24,6 +26,8 @@ window.onload = () => {
 [_4dx.value, _4dy.value, _4dz.value, _4dw.value] = rayOrigin;
 ssi.innerText = SCENE_SIZE;
 sceneSizeInp.value = SCENE_SIZE;
+psi.innerText = globalPointSize;
+pointSizeInp.value = globalPointSize;
 
 	var can = selectEl("#raymarchCan");
 	can.width = SCENE_SIZE ** 2;
@@ -130,7 +134,7 @@ function doMathsWithPixels() {
 		var pointSize = pixels[i][2];
 		vertices.push(...vert, !(col[3] > 0));
 		colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
-		pointSizes.push(120 / (pixels[i][2] * 10));
+		pointSizes.push(globalPointSize / pixels[i][2]);
 	}
 }
 function drawFinalOutput() {
@@ -300,6 +304,7 @@ function loop() {
 	localStorage.setItem("w2",_4dw.value);
 
 	localStorage.setItem("scene_size", sceneSizeInp.value);
+	localStorage.setItem("point_size", pointSizeInp.value);
 	location.reload();
 	
 	//doMathsWithPixels();
