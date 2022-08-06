@@ -4,11 +4,11 @@
 		<title>4D Refraction in a Glass Hypersphere</title>
 		<meta charset="UTF-8">
 		
-		<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-		<link rel="manifest" href="site.webmanifest">
-		<link rel="mask-icon" href="safari-pinned-tab.svg" color="#5bbad5">
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="theme-color" content="#ffffff">
 		
@@ -38,16 +38,23 @@
 				<br/>
 				<input type="range" min="-2" max="2" value="-1.5" step="0.01" id="_3dz" oninput="l3dz.innerText=this.value;"/>
 				<br/>
-				<!--<h4>4D camera</h4>
-				<label for="_4dx">x: </label>
-				<input type="range" min="-5" max="5" value="0" step="0.01" autocomplete="off" id="_4dx"/>
+				<h4>4D camera</h4>
+				<label for="_4dx">x: <span id="l4dx">0</span></label>
 				<br/>
-				<label for="_4dy">y: </label>
-				<input type="range" min="-5" max="5" value="0" step="0.01" autocomplete="off" id="_4dy"/>
+				<input type="range" min="-2" max="2" value="0" step="0.01" id="_4dx" oninput="l4dx.innerText=this.value;"/>
 				<br/>
-				<label for="_4dz">z: </label>
-				<input type="range" min="-5" max="5" value="0" step="0.01" autocomplete="off" id="_4dz"/>
-				<br/>-->
+				<label for="_4dy">y: <span id="l4dy">0</span></label>
+				<br/>
+				<input type="range" min="-2" max="2" value="0" step="0.01" id="_4dy" oninput="l4dy.innerText=this.value;"/>
+				<br/>
+				<label for="_4dz">z: <span id="l4dz">0</span></label> 
+				<br/>
+				<input type="range" min="-2" max="2" value="0" step="0.01" id="_4dz" oninput="l4dz.innerText=this.value;"/>
+				<br/>
+				<label for="_4dw">w: <span id="l4dw">-2</span></label> 
+				<br/>
+				<input type="range" min="-2" max="2" value="-2" step="0.01" id="_4dw" oninput="l4dw.innerText=this.value;"/>
+				<br/>
 				<button onclick="loop();">Render</button>
 			</div>
 		</div>
@@ -63,6 +70,7 @@
 			precision highp float;
 			uniform highp vec2 resolution;
 			uniform highp float size;
+			uniform highp vec4 ray_origin;
 			
 			/*float scene(vec4 p) {
 				return min(length(p) - 1., p.y - -.5);
@@ -174,7 +182,8 @@ vec4 getCol(vec3 coords) {
 	//else return vec3(0.,0.,1.);
 	
 	//return .5 + .5 * cos(iTime + coords.xyx + vec3(0., 2., 4.));
-	vec4 ro = vec4(0., 0., 0., -2.);
+	//vec4 ro = vec4(0., 0., 0., -2.);
+	vec4 ro = ray_origin;
 	ro.xz = rotate(ro.xz, iTime * 22.5);
 	vec4 rd = normalize(vec4(coords, 1.));
 	rd.xz = rotate(rd.xz, iTime * 22.5);
