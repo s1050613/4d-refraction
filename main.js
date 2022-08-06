@@ -11,6 +11,7 @@ var pixelData;
 
 var camera = [+localStorage.getItem("x") || -0.5, +localStorage.getItem("y")||  0.5, +localStorage.getItem("z")||  -1.5];
 console.log(camera)
+var rayOrigin = [+localStorage.getItem("x2") || 0, +localStorage.getItem("y2") || 0, +localStorage.getItem("z2") || 0, +localStorage.getItem("w2") || -2];
 
 window.onload = () => {
 	var vertCode = selectEl("#vertShader").innerText;
@@ -18,6 +19,7 @@ window.onload = () => {
 	
 	
 [l3dx.innerText, l3dy.innerText, l3dz.innerText] = camera;
+[l4dx.innerText, l4dy.innerText, l4dz.innerText, l4dw.innerText] = rayOrigin;
 
 	var can = selectEl("#raymarchCan");
 	can.width = SCENE_SIZE ** 2;
@@ -80,6 +82,7 @@ window.onload = () => {
 	
 	passAttr(sp, "2f", "resolution", [can.width, can.height]);
 	passAttr(sp, "1f", "size", SCENE_SIZE);
+	passAttr(sp, "4f", "ray_origin", rayOrigin);
 	gl.drawElements(gl.TRIANGLES, il, gl.UNSIGNED_SHORT, 0);
 	
 	pixelData = new Uint8Array(can.width * can.height * 4);
@@ -286,6 +289,11 @@ function loop() {
 	localStorage.setItem("x",_3dx.value);
 	localStorage.setItem("y",_3dy.value);
 	localStorage.setItem("z",_3dz.value);
+
+	localStorage.setItem("x2",_4dx.value);
+	localStorage.setItem("y2",_4dy.value);
+	localStorage.setItem("z2",_4dz.value);
+	localStorage.setItem("w2",_4dw.value);
 	location.reload();
 	
 	//doMathsWithPixels();
