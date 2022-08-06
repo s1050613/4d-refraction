@@ -4,9 +4,6 @@
 body {
 	background: #DFFFEF;
 }
-canvas {
-	border: 1px solid black;
-}
 #raymarchCan {
 	display: none;
 }
@@ -41,10 +38,13 @@ h1 {
 	padding: 10px;
 	box-sizing: border-box;
 	display: inline-block;
-	border: 1px solid black;
 	width: 35vw;
 	height: 35vw;
 	position: absolute;
 	right: 5vw;
 	overflow: auto;
+}
+.rightCol, #finalCan {
+	margin-top: 5vw;
+	box-shadow: 0 0 50px 5px #AFDFBF;
 }
