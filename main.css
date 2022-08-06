@@ -28,7 +28,7 @@ body {
 #finalCan {
 	margin-left: 5vw;
 	display: inline-block;
-	width: 35vw;
+	width: 33vw;
 }
 h1 {
 	margin: 5px;
@@ -38,13 +38,12 @@ h1 {
 	padding: 10px;
 	box-sizing: border-box;
 	display: inline-block;
-	width: 35vw;
-	height: 35vw;
+	width: 33vw;
+	height: 33vw;
 	position: absolute;
 	right: 5vw;
 	overflow: auto;
 }
 .rightCol, #finalCan {
-	margin-top: 5vw;
 	box-shadow: 0 0 50px 5px #AFDFBF;
 }
