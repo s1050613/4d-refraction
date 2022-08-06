@@ -3,14 +3,22 @@ const selectEls = document.querySelectorAll.bind(document);
 
 const {floor, min, max, hypot: LENGTH} = Math;
 
-var SCENE_SIZE = 128;
+var SCENE_SIZE = 64;
 
 var gl;
+
+var pixelData;
+
+var camera = [+localStorage.getItem("x") || -0.5, +localStorage.getItem("y")||  0.5, +localStorage.getItem("z")||  -1.5];
+console.log(camera)
 
 window.onload = () => {
 	var vertCode = selectEl("#vertShader").innerText;
 	var fragCode = selectEl("#fragShader").innerText;
 	
+	
+[l3dx.innerText, l3dy.innerText, l3dz.innerText] = camera;
+
 	var can = selectEl("#raymarchCan");
 	can.width = SCENE_SIZE ** 2;
 	can.height = SCENE_SIZE;
@@ -74,19 +82,16 @@ window.onload = () => {
 	passAttr(sp, "1f", "size", SCENE_SIZE);
 	gl.drawElements(gl.TRIANGLES, il, gl.UNSIGNED_SHORT, 0);
 	
-	var pixels = new Uint8Array(can.width * can.height * 4);
-	gl.readPixels(0, 0, can.width, can.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-	console.log(pixels);
+	pixelData = new Uint8Array(can.width * can.height * 4);
+	gl.readPixels(0, 0, can.width, can.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
+	//console.log(pixelData);
 
-	drawFinalOutput(pixels);
+	drawFinalOutput();
 };
-function drawFinalOutput(data) {
-	// Render to 2d canvas
-	var finalCan = selectEl("#finalCan");
-	var gl2 = finalCan.getContext("webgl") || can.getContext("experimental-webgl");
-	
-	var camera = [-0.5, 0.5, -1.5];
-	var pixels = [];
+var finalCan, gl2, sp;
+var pixels = [], vertices = [], colors = [], pointSizes = [];
+function doMathsWithPixels() {
+	pixels = [];
 	for(var i = 0; i < /*data.length*/ SCENE_SIZE ** 3 * 4; i += 4) {
 		var pixelN = i / 4;
 		var imageX = pixelN % (SCENE_SIZE ** 2);
@@ -104,36 +109,46 @@ function drawFinalOutput(data) {
 		y += camera.y;
 		z += camera.z;
 		
-		pixels.push([[x, y, z], [data[i], data[i + 1], data[i + 2], data[i + 3]]]);
+		pixels.push([[x, y, z], [pixelData[i], pixelData[i + 1], pixelData[i + 2], pixelData[i + 3]]]);
 	}
 	pixels = projectAndSort(pixels);
-	console.log(pixels);
+	//console.log(pixels);
 	
-	/*var vertices = [
-		-0.5,0.5,0.0,
-		-0.002,0.5,0.0, 
-		0.0,0.5,0.0,
-	];
-
-	var colors = [0,0,1,  0,1,0,1,0,0,];*/
-	var vertices = [];
-	var colors = [];
+	vertices = [];
+	colors = [];
+	pointSizes = [];
 	for(var i = 0; i < pixels.length; i++) {
-		//vertices.push(...pixels[i][0]);
-		//colors.push(...pixels[i][1]);
 		var vert = pixels[i][0];
 		var col = pixels[i][1];
+		var pointSize = pixels[i][2];
 		vertices.push(...vert, !(col[3] > 0));
 		colors.push(col[0] / 255, col[1] / 255, col[2] / 255);
+		pointSizes.push(120 / (pixels[i][2] * 10));
 	}
-	console.log(vertices);
-	console.log(colors);
+}
+function drawFinalOutput() {
+	// Render to 2d canvas
+	/*if(!finalCan) {
+		finalCan = selectEl("#finalCan");
+		gl2 = finalCan.getContext("webgl") || finalCan.getContext("experimental-webgl");
+	}*/
+	if(finalCanCont.lastChild) {
+		finalCanCont.innerHTML="";
+	}
+	var finalCan = document.createElement("canvas");
+	finalCan.id = "finalCan";
+	finalCan.width = 2048;
+	finalCan.height = 2048;
+	finalCanCont.appendChild(finalCan);
+	gl2 = finalCan.getContext("webgl") || finalCan.getContext("experimental-webgl");
+	
+	doMathsWithPixels();
 
 	// Create an empty buffer object to store the vertex buffer
-	var vertex_buffer = gl2.createBuffer();
+	var vb = gl2.createBuffer();
 
 	//Bind appropriate array buffer to it
-	gl2.bindBuffer(gl2.ARRAY_BUFFER, vertex_buffer);
+	gl2.bindBuffer(gl2.ARRAY_BUFFER, vb);
 
 	// Pass the vertex data to the buffer
 	gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(vertices), gl2.STATIC_DRAW);
@@ -146,18 +161,25 @@ function drawFinalOutput(data) {
 	gl2.bindBuffer(gl2.ARRAY_BUFFER, color_buffer);
 	gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(colors), gl2.STATIC_DRAW);
 
+	gl2.bindBuffer(gl2.ARRAY_BUFFER, null);
+	var pointSizeBuffer = gl2.createBuffer();
+	gl2.bindBuffer(gl2.ARRAY_BUFFER, pointSizeBuffer);
+	gl2.bufferData(gl2.ARRAY_BUFFER, new Float32Array(pointSizes), gl2.STATIC_DRAW);
+
 
 	/*=========================Shaders========================*/
 
 	// vertex shader source code
-	var vertCode = 'attribute vec3 coordinates;'+
-	'attribute vec3 color;'+
-	'varying vec3 vColor;'+
-	'void main(void) {' +
-		' gl_Position = vec4(coordinates, 1.0);' +
-		'vColor = color;'+
-		'gl_PointSize = 2.0;'+
-	'}';
+	var vertCode = `
+	attribute vec3 coordinates;
+	attribute vec3 color;
+	attribute float pointSize;
+	varying vec3 vColor;
+	void main(void) {
+		gl_Position = vec4(coordinates, 1.);
+		vColor = color;
+		gl_PointSize = pointSize;
+	}`;
 
 	// Create a vertex shader object
 	var vertShader = gl2.createShader(gl2.VERTEX_SHADER);
@@ -190,29 +212,29 @@ function drawFinalOutput(data) {
 
 	// Create a shader program object to store
 	// the combined shader program
-	var shaderProgram = gl2.createProgram();
+	var sp = gl2.createProgram();
 
 	// Attach a vertex shader
-	gl2.attachShader(shaderProgram, vertShader); 
+	gl2.attachShader(sp, vertShader); 
 
 	// Attach a fragment shader
-	gl2.attachShader(shaderProgram, fragShader);
+	gl2.attachShader(sp, fragShader);
 
 	// Link both programs
-	gl2.linkProgram(shaderProgram);
-	if ( !gl2.getProgramParameter(shaderProgram, gl2.LINK_STATUS) )
-		alert(gl2.getProgramInfoLog(shaderProgram));
+	gl2.linkProgram(sp);
+	if ( !gl2.getProgramParameter(sp, gl2.LINK_STATUS) )
+		alert(gl2.getProgramInfoLog(sp));
 
 	// Use the combined shader program object
-	gl2.useProgram(shaderProgram);
+	gl2.useProgram(sp);
 
 	/*======== Associating shaders to buffer objects ========*/
 
 	// Bind vertex buffer object
-	gl2.bindBuffer(gl2.ARRAY_BUFFER, vertex_buffer);
+	gl2.bindBuffer(gl2.ARRAY_BUFFER, vb);
 
 	// Get the attribute location
-	var coord = gl2.getAttribLocation(shaderProgram, "coordinates");
+	var coord = gl2.getAttribLocation(sp, "coordinates");
 
 	// Point an attribute to the currently bound VBO
 	gl2.vertexAttribPointer(coord, 3, gl2.FLOAT, false, 0, 0);
@@ -224,13 +246,18 @@ function drawFinalOutput(data) {
 	gl2.bindBuffer(gl2.ARRAY_BUFFER, color_buffer);
 
 	// get the attribute location
-	var color = gl2.getAttribLocation(shaderProgram, "color");
+	var color = gl2.getAttribLocation(sp, "color");
 
 	// point attribute to the color buffer object
 	gl2.vertexAttribPointer(color, 3, gl2.FLOAT, false,0,0) ;
 
 	// enable the color attribute
 	gl2.enableVertexAttribArray(color);
+	
+	gl2.bindBuffer(gl2.ARRAY_BUFFER, pointSizeBuffer);
+	var ps = gl2.getAttribLocation(sp, "pointSize");
+	gl2.vertexAttribPointer(ps, 1, gl2.FLOAT, false, 0, 0);
+	gl2.enableVertexAttribArray(ps);
 
 	/*============= Drawing the primitive ===============*/
 
@@ -248,6 +275,25 @@ function drawFinalOutput(data) {
 
 	// Draw the triangle
 	gl2.drawArrays(gl2.POINTS, 0, pixels.length);
+
+	//loop();
+}
+
+var lastFrame = 0;
+function loop() {
+	//camera = [_3dx.value, _3dy.value, _3dz.value]
+	//drawFinalOutput();
+	localStorage.setItem("x",_3dx.value);
+	localStorage.setItem("y",_3dy.value);
+	localStorage.setItem("z",_3dz.value);
+	location.reload();
+	
+	//doMathsWithPixels();
+	
+
+	/*console.log("FPS: " + 1000 / (performance.now() - lastFrame));
+	lastFrame = performance.now();
+	window.requestAnimationFrame(loop);*/
 }
 
 function compile(shader) {
@@ -280,5 +326,5 @@ function passAttr(program, dataType, name, stuffs) {
 }
 
 function projectAndSort(points) {
-	return points.map(p => [LENGTH(...p[0]), [p[0][0] / p[0][2], p[0][1] / p[0][2]], p[1]]).sort((a, b) => a[0] - b[0]).map(p => [p[1], p[2]]);
+	return points.map(p => [LENGTH(...p[0]), [p[0][0] / p[0][2], p[0][1] / p[0][2]], p[1]]).sort((a, b) => a[0] - b[0]).map(p => [p[1], p[2], p[0]]);
 }
