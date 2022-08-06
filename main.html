@@ -25,6 +25,9 @@
 			<div id="finalCanCont"></div>
 			<div class="rightCol">
 				<h2>Settings</h2>
+				<label for="sceneSizeInp">Scene size: <span id="ssi">64</span></label>
+				<br/>
+				<input type="range" min="16" max="128" value="64" step="1" id="sceneSizeInp" oninput="ssi.innerText = this.value;"/>
 				<h4>3D camera</h4>
 				<label for="_3dx">x: <span id="l3dx">-0.5</span></label>
 				<br/>
@@ -221,7 +224,7 @@ vec4 getCol(vec3 coords) {
 					mat = matAtPoint(p);
 					//mat = matAtPoint(vec3(10.));
 					if(mat != -1) {
-						return vec4(1.,0.,0., 1.);
+						//return vec4(1.,0.,0., 1.);
 					}
 					n *= -1.;
 				}
