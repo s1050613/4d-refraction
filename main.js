@@ -3,7 +3,7 @@ const selectEls = document.querySelectorAll.bind(document);
 
 const {floor, min, max, hypot: LENGTH} = Math;
 
-var SCENE_SIZE = 64;
+var SCENE_SIZE = +localStorage.getItem("scene_size") || 64;
 
 var gl;
 
@@ -19,7 +19,11 @@ window.onload = () => {
 	
 	
 [l3dx.innerText, l3dy.innerText, l3dz.innerText] = camera;
+[_3dx.value, _3dy.value, _3dz.value] = camera;
 [l4dx.innerText, l4dy.innerText, l4dz.innerText, l4dw.innerText] = rayOrigin;
+[_4dx.value, _4dy.value, _4dz.value, _4dw.value] = rayOrigin;
+ssi.innerText = SCENE_SIZE;
+sceneSizeInp.value = SCENE_SIZE;
 
 	var can = selectEl("#raymarchCan");
 	can.width = SCENE_SIZE ** 2;
@@ -294,6 +298,8 @@ function loop() {
 	localStorage.setItem("y2",_4dy.value);
 	localStorage.setItem("z2",_4dz.value);
 	localStorage.setItem("w2",_4dw.value);
+
+	localStorage.setItem("scene_size", sceneSizeInp.value);
 	location.reload();
 	
 	//doMathsWithPixels();
